@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  laptopmatch-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: laptopmatch-dss-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=sqlite:////app/laptopmatch_dss/laptopmatch.db
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - CORS_ORIGINS=*
+      - SCRAPER_RATE_LIMIT_SECONDS=2.0
+    volumes:
+      - laptopmatch_data:/app/laptopmatch_dss/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  laptopmatch_data:

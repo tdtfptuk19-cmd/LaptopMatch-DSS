@@ -1,0 +1,27 @@
+{
+  "version": "hedonic_ols_hc3_20261008_013704",
+  "created_at": "2026-11-10T01:37:04.203875",
+  "snapshot_date": "2026-10-08",
+  "sample_size": 209,
+  "r_squared": 0.8449,
+  "mape_5fold_pct": 12.58,
+  "breusch_pagan_pvalue": 0.01864,
+  "intercept": 16.51417708294569,
+  "coefficients": {
+    "cpu_k": 0.013954288077995508,
+    "gpu_k": 0.01607341599019746,
+    "ram_gb": 0.009087860420969235,
+    "battery_wh": 0.004434341976477722,
+    "weight_kg": -0.20070677080475213,
+    "dgpu": 0.14756667599822315
+  },
+  "features": [
+    "cpu_k",
+    "gpu_k",
+    "ram_gb",
+    "battery_wh",
+    "weight_kg",
+    "dgpu"
+  ],
+  "cov_type": "HC3"
+}

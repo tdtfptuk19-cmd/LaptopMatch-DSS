@@ -1,0 +1,1259 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LaptopMatch Decision Support System API",
+    "description": "\n    Hệ thống Hỗ trợ Ra Quyết định Mua sắm Laptop (DSS301 - Nhóm 1).\n    Xây dựng theo kiến trúc 4 hệ thống con (Turban – Sharda – Delen):\n    - Data Management Subsystem (ETL, Multi-seller Scrapers, Data Quality Audit)\n    - Model Management Subsystem (Hedonic OLS Robust HC3, AHP Saaty, Multi-criteria Scoring, What-If Simulation)\n    - User Interface / Dialog Subsystem (RESTful API, Telemetry, Feedback)\n    - Knowledge-based Subsystem (Rule-based Decision Matrix & AI Explanation)\n    ",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Kiểm tra trạng thái hệ thống",
+        "description": "Kiểm tra kết nối CSDL và các thành phần cốt lõi.",
+        "operationId": "health_check_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/personas": {
+      "get": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Lấy danh sách các Persona mẫu",
+        "description": "Trả về danh sách các Persona có sẵn trong hệ thống (Q1, U1, U2, U4, U5).",
+        "operationId": "list_personas_api_personas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recommend": {
+      "post": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Gợi ý danh sách laptop tối ưu theo DSS_Score",
+        "description": "Tính điểm DSS_Score = Eligibility x [alpha*Utility + (1-alpha)*Deal].\nCung cấp thông tin chi tiết từng tiêu chí S_k, Shop_Trust và cảnh báo đắt >= 10%.",
+        "operationId": "recommend_laptops_api_recommend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ahp/calculate": {
+      "post": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Tính trọng số ưu tiên bằng ma trận so sánh cặp AHP",
+        "description": "Tiếp nhận ma trận so sánh cặp theo thang Saaty 1-9.\nTính toán vector trọng số w_k, chỉ số CI, CR.\nNếu CR >= 0.10 sẽ trả về cảnh báo và gợi ý cặp tiêu chí cần điều chỉnh.",
+        "operationId": "calculate_ahp_api_ahp_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AHPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AHPResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/whatif": {
+      "post": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Mô phỏng phân tích kịch bản What-If",
+        "description": "Chạy các kịch bản What-if:\n- WS1: Thắt chặt ngân sách (30tr -> 20tr -> 18tr)\n- WS2: Gaming / Đồ họa\n- WS3: SAZO giảm giá Zenbook AI 7 350\n- WS4: Ràng buộc di động cứng\n- WS5: Hệ sinh thái Apple\n- Custom: Tùy biến mọi tham số",
+        "operationId": "run_whatif_scenario_api_whatif_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatIfRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatIfResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models/hedonic": {
+      "get": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Lấy thông số mô hình định giá Hedonic OLS Robust HC3",
+        "description": "Trả về 6 hệ số beta, intercept, R2, MAPE (5-fold CV), Breusch-Pagan p-value\nvà metadata phiên bản đang hoạt động của mô hình Hedonic.",
+        "operationId": "get_hedonic_model_metadata_api_models_hedonic_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HedonicModelResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telemetry": {
+      "post": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Ghi nhận sự kiện người dùng (đo lường RAR)",
+        "description": "Ghi nhận hành vi tương tác của người dùng:\n- view_seller: Click sang website nhà bán\n- save_laptop: Lưu máy vào danh sách ưa thích\n- copy_config: Sao chép cấu hình\n- pin_compare: Ghim để so sánh\nPhục vụ trực tiếp cho Khuyến nghị R6: Đo lường Recommendation Acceptance Rate (RAR).",
+        "operationId": "record_telemetry_api_telemetry_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelemetryEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback": {
+      "post": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Ghi nhận đánh giá phản hồi từ người dùng",
+        "description": "Ghi nhận đánh giá tính hữu ích (Có/Không), số sao và góp ý để cải tiến DSS.",
+        "operationId": "record_feedback_api_feedback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserFeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFeedbackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explain/{offer_id}": {
+      "get": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Giải thích quyết định đề xuất thông minh bằng AI & Luật chuyên gia",
+        "description": "Sinh lời giải thích tự nhiên bằng tiếng Việt (3-4 câu) cho offer:\n- Phân tích sự thỏa mãn tiêu chuẩn phần cứng (Utility)\n- Phân tích mức độ hời và tiết kiệm tài chính (Deal & Fair Price)\n- Kích hoạt các luật chuyên gia (R1-R6) và phân tích điểm mạnh / điểm đánh đổi",
+        "operationId": "explain_offer_decision_api_explain__offer_id__get",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Offer Id"
+            }
+          },
+          {
+            "name": "persona_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "Q1",
+              "title": "Persona Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kpi/rar": {
+      "get": {
+        "tags": [
+          "LaptopMatch DSS"
+        ],
+        "summary": "Chỉ số Đo lường Tỷ lệ Chấp nhận Khuyến nghị (RAR - R6)",
+        "description": "Tính toán chỉ số RAR dựa trên hành vi tương tác thực tế từ Telemetry và Feedback.",
+        "operationId": "get_recommendation_acceptance_kpi_api_kpi_rar_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Trang chủ API",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AHPRequest": {
+        "properties": {
+          "criteria": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Criteria",
+            "description": "Danh sách các tiêu chí cần so sánh",
+            "default": [
+              "cpu",
+              "ram",
+              "ssd",
+              "w"
+            ]
+          },
+          "matrix": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Matrix",
+            "description": "Ma trận so sánh cặp nxn theo thang Saaty 1-9"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method",
+            "description": "Phương pháp tính: 'eigen' (Principal Eigenvector) hoặc 'geometric'",
+            "default": "eigen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matrix"
+        ],
+        "title": "AHPRequest"
+      },
+      "AHPResponse": {
+        "properties": {
+          "is_consistent": {
+            "type": "boolean",
+            "title": "Is Consistent"
+          },
+          "consistency_ratio": {
+            "type": "number",
+            "title": "Consistency Ratio"
+          },
+          "consistency_index": {
+            "type": "number",
+            "title": "Consistency Index"
+          },
+          "lambda_max": {
+            "type": "number",
+            "title": "Lambda Max"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Weights"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          },
+          "inconsistency_hints": {
+            "items": {
+              "$ref": "#/components/schemas/InconsistencyHint"
+            },
+            "type": "array",
+            "title": "Inconsistency Hints",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_consistent",
+          "consistency_ratio",
+          "consistency_index",
+          "lambda_max",
+          "weights"
+        ],
+        "title": "AHPResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HedonicModelResponse": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "snapshot_date": {
+            "type": "string",
+            "title": "Snapshot Date"
+          },
+          "sample_size": {
+            "type": "integer",
+            "title": "Sample Size"
+          },
+          "r_squared": {
+            "type": "number",
+            "title": "R Squared"
+          },
+          "mape_5fold_pct": {
+            "type": "number",
+            "title": "Mape 5Fold Pct"
+          },
+          "breusch_pagan_pvalue": {
+            "type": "number",
+            "title": "Breusch Pagan Pvalue"
+          },
+          "intercept": {
+            "type": "number",
+            "title": "Intercept"
+          },
+          "coefficients": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Coefficients"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Features"
+          },
+          "cov_type": {
+            "type": "string",
+            "title": "Cov Type",
+            "default": "HC3"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "created_at",
+          "snapshot_date",
+          "sample_size",
+          "r_squared",
+          "mape_5fold_pct",
+          "breusch_pagan_pvalue",
+          "intercept",
+          "coefficients",
+          "features"
+        ],
+        "title": "HedonicModelResponse"
+      },
+      "InconsistencyHint": {
+        "properties": {
+          "criterion_1": {
+            "type": "string",
+            "title": "Criterion 1"
+          },
+          "criterion_2": {
+            "type": "string",
+            "title": "Criterion 2"
+          },
+          "current_judgment": {
+            "type": "number",
+            "title": "Current Judgment"
+          },
+          "recommended_value": {
+            "type": "number",
+            "title": "Recommended Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "criterion_1",
+          "criterion_2",
+          "current_judgment",
+          "recommended_value"
+        ],
+        "title": "InconsistencyHint"
+      },
+      "OfferResponse": {
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "offer_id": {
+            "type": "string",
+            "title": "Offer Id"
+          },
+          "brand": {
+            "type": "string",
+            "title": "Brand"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "seller_id": {
+            "type": "string",
+            "title": "Seller Id"
+          },
+          "seller_name": {
+            "type": "string",
+            "title": "Seller Name"
+          },
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "price_vnd": {
+            "type": "number",
+            "title": "Price Vnd"
+          },
+          "price_m": {
+            "type": "number",
+            "title": "Price M"
+          },
+          "fair_price_vnd": {
+            "type": "number",
+            "title": "Fair Price Vnd"
+          },
+          "price_adv_pct": {
+            "type": "number",
+            "title": "Price Adv Pct"
+          },
+          "utility": {
+            "type": "number",
+            "title": "Utility"
+          },
+          "deal": {
+            "type": "number",
+            "title": "Deal"
+          },
+          "dss_score": {
+            "type": "number",
+            "title": "Dss Score"
+          },
+          "shop_trust": {
+            "type": "number",
+            "title": "Shop Trust"
+          },
+          "warranty_months": {
+            "type": "integer",
+            "title": "Warranty Months"
+          },
+          "return_days": {
+            "type": "integer",
+            "title": "Return Days"
+          },
+          "ram_gb": {
+            "type": "integer",
+            "title": "Ram Gb"
+          },
+          "ssd_gb": {
+            "type": "integer",
+            "title": "Ssd Gb"
+          },
+          "weight_kg": {
+            "type": "number",
+            "title": "Weight Kg"
+          },
+          "battery_wh": {
+            "type": "number",
+            "title": "Battery Wh"
+          },
+          "expensive_warning": {
+            "type": "boolean",
+            "title": "Expensive Warning",
+            "description": "Cảnh báo nếu đắt hơn giá hợp lý >= 10% (Adv <= -10%)",
+            "default": false
+          },
+          "criteria_scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Criteria Scores",
+            "description": "Điểm thành phần S_k từng tiêu chí"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rank",
+          "offer_id",
+          "brand",
+          "model",
+          "seller_id",
+          "seller_name",
+          "city",
+          "price_vnd",
+          "price_m",
+          "fair_price_vnd",
+          "price_adv_pct",
+          "utility",
+          "deal",
+          "dss_score",
+          "shop_trust",
+          "warranty_months",
+          "return_days",
+          "ram_gb",
+          "ssd_gb",
+          "weight_kg",
+          "battery_wh"
+        ],
+        "title": "OfferResponse"
+      },
+      "RecommendRequest": {
+        "properties": {
+          "persona_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persona Id",
+            "description": "ID của persona (Q1, U1, U2, U4, U5) hoặc để trống nếu dùng tùy chỉnh",
+            "default": "Q1"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget",
+            "description": "Ngân sách tối đa (VND), nếu chỉ định sẽ ghi đè persona"
+          },
+          "alpha": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha",
+            "description": "Trọng số Utility [0.0, 1.0], còn lại 1-alpha là Deal"
+          },
+          "k": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 30.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "K",
+            "description": "Hệ số dốc Sigmoid cho điểm Deal (mặc định 10.0)"
+          },
+          "weights": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weights",
+            "description": "Vector trọng số w_k (cpu, ram, ssd, bat, hz, w)"
+          },
+          "thresholds": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thresholds",
+            "description": "Ngưỡng kỳ vọng r_k"
+          },
+          "hard_constraints": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {},
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hard Constraints",
+            "description": "Danh sách ràng buộc cứng dạng [[field, op, value], ...]"
+          },
+          "seller_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Id",
+            "description": "Lọc theo nhà bán cụ thể (FPT, CPS, GEAR, SAZO, T&T Center, NCPC)"
+          },
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand",
+            "description": "Lọc theo thương hiệu (ASUS, Acer, Lenovo, HP, Dell, Apple, MSI)"
+          },
+          "top_n": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Top N",
+            "description": "Số lượng offer cần lấy",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "title": "RecommendRequest"
+      },
+      "RecommendResponse": {
+        "properties": {
+          "persona_used": {
+            "type": "string",
+            "title": "Persona Used"
+          },
+          "total_eligible": {
+            "type": "integer",
+            "title": "Total Eligible"
+          },
+          "total_market_offers": {
+            "type": "integer",
+            "title": "Total Market Offers"
+          },
+          "top_offers": {
+            "items": {
+              "$ref": "#/components/schemas/OfferResponse"
+            },
+            "type": "array",
+            "title": "Top Offers"
+          },
+          "summary_kpi": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Summary Kpi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "persona_used",
+          "total_eligible",
+          "total_market_offers",
+          "top_offers",
+          "summary_kpi"
+        ],
+        "title": "RecommendResponse"
+      },
+      "TelemetryEventRequest": {
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "title": "Event Type",
+            "description": "view_seller, save_laptop, copy_config, pin_compare"
+          },
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id",
+            "description": "Mã offer liên quan"
+          },
+          "persona": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persona",
+            "description": "Persona đang chọn",
+            "default": "Q1"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload",
+            "description": "Dữ liệu kèm theo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_type"
+        ],
+        "title": "TelemetryEventRequest"
+      },
+      "TelemetryEventResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "event_id": {
+            "type": "integer",
+            "title": "Event Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "event_id",
+          "message"
+        ],
+        "title": "TelemetryEventResponse"
+      },
+      "UserFeedbackRequest": {
+        "properties": {
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          },
+          "persona": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persona",
+            "default": "Q1"
+          },
+          "is_helpful": {
+            "type": "boolean",
+            "title": "Is Helpful",
+            "description": "Khuyến nghị có hữu ích không (True/False)"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating",
+            "description": "Đánh giá sao 1-5"
+          },
+          "comments": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_helpful"
+        ],
+        "title": "UserFeedbackRequest"
+      },
+      "UserFeedbackResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "feedback_id": {
+            "type": "integer",
+            "title": "Feedback Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "feedback_id",
+          "message"
+        ],
+        "title": "UserFeedbackResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WhatIfRequest": {
+        "properties": {
+          "scenario_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Type",
+            "description": "Preset kịch bản: WS1, WS2, WS3, WS4, WS5 hoặc None/custom"
+          },
+          "persona_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persona Id",
+            "description": "Persona cơ sở",
+            "default": "Q1"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget",
+            "description": "Ngân sách mới"
+          },
+          "alpha": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha",
+            "description": "Alpha mới"
+          },
+          "weights": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weights",
+            "description": "Trọng số mới"
+          },
+          "hard_constraints": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {},
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hard Constraints",
+            "description": "Ràng buộc cứng mới"
+          },
+          "seller_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Id",
+            "description": "Lọc nhà bán"
+          },
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand",
+            "description": "Lọc thương hiệu"
+          },
+          "discount_cut_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Cut Pct",
+            "description": "Mức giảm giá thêm (dành cho WS3)"
+          }
+        },
+        "type": "object",
+        "title": "WhatIfRequest"
+      },
+      "WhatIfResponse": {
+        "properties": {
+          "scenario": {
+            "type": "string",
+            "title": "Scenario"
+          },
+          "findings": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Findings"
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendation"
+          },
+          "comparison_kpi": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Kpi"
+          },
+          "details": {
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario",
+          "details"
+        ],
+        "title": "WhatIfResponse"
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C environments & pytest
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Databases & local state (TUYỆT ĐỐI KHÔNG COMMIT FILE DB CÁ NHÂN)
+*.db
+*.sqlite
+*.sqlite3
+laptopmatch.db
+
+# Secrets & Environment variables (CHỈ COMMIT .env.example)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary & backup files
+*.bak
+~$*
+results.pkl
+*.tmp
+build_frontend.py
+frontend/
+
+# IDE & Editor folders
+.vscode/
+.idea/
+.claude/
+.gemini/
+.system_generated/
+
+# Model training run snapshots (chỉ giữ latest_hedonic_model.json)
+models_registry/hedonic_ols_hc3_*.json

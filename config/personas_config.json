@@ -1,0 +1,117 @@
+{
+  "Q1": {
+    "name": "Q1 – Sinh viên Lập trình (Chuẩn Benchmark)",
+    "description": "SV ngành lập trình, ngân sách tối đa 30tr, cần máy đủ mạnh để code và đủ nhẹ để mang đi học.",
+    "budget": 30000000.0,
+    "alpha": 0.65,
+    "hard_constraints": [
+      {"field": "ram_gb", "op": ">=", "value": 16},
+      {"field": "ssd_gb", "op": ">=", "value": 512}
+    ],
+    "thresholds_r": {
+      "cpu": 18000,
+      "ram": 16,
+      "ssd": 512,
+      "w": 1.5
+    },
+    "weights_w": {
+      "cpu": 0.23075,
+      "ram": 0.2077,
+      "ssd": 0.06155,
+      "w": 0.50
+    }
+  },
+  "U1": {
+    "name": "U1 – Sinh viên Phổ thông (Ngân sách thấp)",
+    "description": "Sinh viên học tập đại cương, ngân sách giới hạn ≤ 15tr, ưu tiên giá rẻ và đáp ứng nhu cầu cơ bản.",
+    "budget": 15000000.0,
+    "alpha": 0.60,
+    "hard_constraints": [
+      {"field": "ram_gb", "op": ">=", "value": 8},
+      {"field": "ssd_gb", "op": ">=", "value": 256}
+    ],
+    "thresholds_r": {
+      "cpu": 10000,
+      "ram": 8,
+      "ssd": 256,
+      "w": 1.8
+    },
+    "weights_w": {
+      "cpu": 0.20,
+      "ram": 0.20,
+      "ssd": 0.10,
+      "w": 0.50
+    }
+  },
+  "U2": {
+    "name": "U2 – Nhân viên Văn phòng (Siêu di động)",
+    "description": "Ưu tiên độ ổn định, thời lượng pin cao và trọng lượng nhẹ để di chuyển thường xuyên.",
+    "budget": 25000000.0,
+    "alpha": 0.65,
+    "hard_constraints": [
+      {"field": "weight_kg", "op": "<=", "value": 1.5},
+      {"field": "battery_wh", "op": ">=", "value": 50}
+    ],
+    "thresholds_r": {
+      "cpu": 14000,
+      "ram": 16,
+      "ssd": 512,
+      "bat": 55,
+      "w": 1.4
+    },
+    "weights_w": {
+      "cpu": 0.15,
+      "ram": 0.15,
+      "ssd": 0.10,
+      "bat": 0.20,
+      "w": 0.40
+    }
+  },
+  "U4": {
+    "name": "U4 – Đồ họa & Gaming (Hiệu năng cao / WS2)",
+    "description": "Cần GPU rời mạnh, màn hình tần số quét cao (≥120Hz) phục vụ dựng video, 3D và gaming.",
+    "budget": 35000000.0,
+    "alpha": 0.70,
+    "hard_constraints": [
+      {"field": "ram_gb", "op": ">=", "value": 16}
+    ],
+    "thresholds_r": {
+      "cpu": 18000,
+      "gpu": 9000,
+      "ram": 16,
+      "hz": 120,
+      "w": 2.0
+    },
+    "weights_w": {
+      "cpu": 0.20,
+      "gpu": 0.35,
+      "ram": 0.15,
+      "hz": 0.15,
+      "w": 0.15
+    }
+  },
+  "U5": {
+    "name": "U5 – Doanh nhân Cao cấp (Apple / Ultra-premium)",
+    "description": "Dòng máy cao cấp, thiết kế hoàn thiện xuất sắc, màn hình chuẩn màu, pin bền bỉ.",
+    "budget": 40000000.0,
+    "alpha": 0.65,
+    "hard_constraints": [
+      {"field": "ram_gb", "op": ">=", "value": 16},
+      {"field": "ssd_gb", "op": ">=", "value": 256}
+    ],
+    "thresholds_r": {
+      "cpu": 18000,
+      "ram": 16,
+      "ssd": 512,
+      "bat": 65,
+      "w": 1.4
+    },
+    "weights_w": {
+      "cpu": 0.20,
+      "ram": 0.20,
+      "ssd": 0.10,
+      "bat": 0.20,
+      "w": 0.30
+    }
+  }
+}

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaptopMatch DSS - Hệ thống Hỗ trợ Ra Quyết định Mua sắm Laptop</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+
+    <!-- Top Navbar -->
+    <header class="navbar">
+        <div class="navbar-brand">
+            💻 LaptopMatch DSS
+            <span class="badge">Level 4 Production</span>
+        </div>
+        <div>
+            <span id="api-status" class="api-badge">Đang kiểm tra kết nối...</span>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs (Miller 7±2 Rule: đúng 5 tabs) -->
+    <nav class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('tab-overview')">📊 Trang 1: Tổng quan & Khuyến nghị</button>
+        <button class="tab-btn" onclick="switchTab('tab-insights')">🔍 Trang 2: Insight Thị trường</button>
+        <button class="tab-btn" onclick="switchTab('tab-pricing')">🎯 Trang 3: Dự báo Fair Price</button>
+        <button class="tab-btn" onclick="switchTab('tab-simulator')">⚙️ Trang 4: What-if Simulator</button>
+        <button class="tab-btn" onclick="switchTab('tab-ahp')">⚖️ Trang 5: Cá nhân hóa AHP (Saaty)</button>
+    </nav>
+
+    <main class="container">
+
+        <!-- ==================== TRANG 1: TỔNG QUAN & KHUYẾN NGHỊ ==================== -->
+        <section id="tab-overview" class="tab-content active">
+            <!-- 6 KPI Tiles (Pre-attentive visual layout) -->
+            <div class="kpi-grid">
+                <div class="kpi-card highlight">
+                    <div class="kpi-title">DSS Hạng 1 (Q1)</div>
+                    <div class="kpi-value" id="kpi-top1-dss">0.824</div>
+                    <div class="kpi-subtext" id="kpi-top1-name">ASUS Zenbook 14 @ SAZO</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Lựa chọn đạt chuẩn</div>
+                    <div class="kpi-value" id="kpi-eligible-count">103</div>
+                    <div class="kpi-subtext">Trên tổng số 210 offer (49.0%)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Sai số Hedonic (MAPE)</div>
+                    <div class="kpi-value" style="color: var(--success);">12.6%</div>
+                    <div class="kpi-subtext">Mục tiêu ≤ 15.0% (R² = 0.83)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Vi phạm ràng buộc Top-5</div>
+                    <div class="kpi-value" style="color: var(--success);">0%</div>
+                    <div class="kpi-subtext">So với 100% của cách chọn rẻ nhất</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Tiết kiệm trung bình Top-5</div>
+                    <div class="kpi-value" style="color: var(--primary);">6.1 tr</div>
+                    <div class="kpi-subtext">So với giá trị thực tế Fair Price</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Tỷ lệ chấp thuận (RAR)</div>
+                    <div class="kpi-value" id="kpi-rar-pct" style="color: var(--warning);">Đang đo</div>
+                    <div class="kpi-subtext">Ghi nhận telemetry theo R6</div>
+                </div>
+            </div>
+
+            <!-- Side-by-side Compare Drawer (Ghim 2-3 máy) -->
+            <div id="compare-drawer" class="compare-drawer" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <h3 style="color: var(--primary); font-size: 1.1rem;">⚖️ So Sánh Song Song Đối Đầu (Side-by-Side Compare)</h3>
+                    <button class="btn btn-outline btn-sm" onclick="pinnedOffers=[]; renderCompareDrawer();">Xóa danh sách so sánh</button>
+                </div>
+                <div id="compare-cards-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;"></div>
+            </div>
+
+            <!-- AI Explanation Box (Knowledge-based Subsystem) -->
+            <div class="ai-box" id="ai-box">
+                <div class="ai-headline" id="ai-headline">🤖 Tại sao chiếc máy này được hệ thống LaptopMatch DSS xếp Hạng 1?</div>
+                <p class="ai-text" id="ai-text">
+                    Đang tải giải thích chi tiết từ mô-đun Knowledge-based...
+                </p>
+                <ul class="strengths-list" id="ai-strengths"></ul>
+                <div style="margin-top: 12px; display: flex; gap: 8px;">
+                    <button class="btn btn-outline btn-sm" onclick="fetchAIExplanation('OBS0164')">🔄 Yêu cầu AI phân tích lại</button>
+                </div>
+            </div>
+
+            <!-- Top 5 Recommendations Table -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🏆 Top-5 Đề xuất Tối ưu cho Hồ sơ Q1 (SV Lập trình ≤ 30tr, RAM ≥ 16GB, SSD ≥ 512GB)</div>
+                    <div>
+                        <span class="badge-deal">Sắp xếp theo DSS_Score (Khuyến nghị R1)</span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="top5-table">
+                        <thead>
+                            <tr>
+                                <th>Hạng</th>
+                                <th>Mẫu máy</th>
+                                <th>Nhà bán</th>
+                                <th>Giá bán</th>
+                                <th>Fair Price</th>
+                                <th>Chênh giá (Adv)</th>
+                                <th>Utility</th>
+                                <th>Deal</th>
+                                <th>DSS_Score</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top5-tbody"></tbody>
+                    </table>
+                </div>
+
+                <!-- User Feedback Widget (Đo lường RAR theo R6) -->
+                <div class="feedback-bar">
+                    <div style="font-size: 0.9rem; font-weight: 600; color: #334155;">
+                        📌 Đánh giá khuyến nghị này (Khuyến nghị R6 - Đo lường RAR):
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-outline btn-sm" onclick="submitFeedback('OBS0164', true)">👍 Hữu ích</button>
+                        <button class="btn btn-outline btn-sm" onclick="submitFeedback('OBS0164', false)">👎 Chưa phù hợp</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TRANG 2: INSIGHT THỊ TRƯỜNG ==================== -->
+        <section id="tab-insights" class="tab-content">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Cùng cấu hình, nhà bán quyết định giá (Chấp nhận H4)</div>
+                    </div>
+                    <div id="chart-seller-diff" style="height: 340px;"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">% Giảm là chính sách nhà bán, không phản ánh độ hời (H15)</div>
+                    </div>
+                    <div id="chart-seller-discount" style="height: 340px;"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Đánh đổi Hiệu năng vs Trọng lượng di động (Chấp nhận H2 & H14)</div>
+                </div>
+                <div id="chart-weight-price" style="height: 380px;"></div>
+            </div>
+        </section>
+
+        <!-- ==================== TRANG 3: DỰ BÁO FAIR PRICE ==================== -->
+        <section id="tab-pricing" class="tab-content">
+            <div class="kpi-grid">
+                <div class="kpi-card highlight">
+                    <div class="kpi-title">Mô hình Định giá</div>
+                    <div class="kpi-value" style="font-size: 1.4rem;">Hedonic OLS HC3</div>
+                    <div class="kpi-subtext">ln(FP) theo 6 đặc trưng kỹ thuật</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Hệ số xác định R²</div>
+                    <div class="kpi-value">0.83</div>
+                    <div class="kpi-subtext">Giải thích 83% biến động giá</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Sai số dự báo MAPE</div>
+                    <div class="kpi-value" style="color: var(--success);">12.6%</div>
+                    <div class="kpi-subtext">5-fold Cross-Validation (≤ 15%)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Khoảng dự báo 80%</div>
+                    <div class="kpi-value" style="font-size: 1.4rem;">[-18%; +24%]</div>
+                    <div class="kpi-subtext">Dải tin cậy định giá thị trường</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🎯 Biểu đồ So sánh Giá thực tế vs Fair Price (Dải tin cậy ±15%)</div>
+                </div>
+                <div id="chart-fair-price" style="height: 420px;"></div>
+            </div>
+
+            <!-- Real-time Fair Price Calculator -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🧮 Máy tính Fair Price Thời gian thực (Thử nghiệm Cấu hình Tùy ý)</div>
+                </div>
+                <div class="sim-grid">
+                    <div class="form-group">
+                        <label class="form-label">CPU Benchmark Score: <span id="calc-cpu-val">26500</span></label>
+                        <input type="range" id="calc-cpu" min="6000" max="45000" step="500" value="26500" oninput="runFairPriceCalc()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">GPU Benchmark Score: <span id="calc-gpu-val">8150</span></label>
+                        <input type="range" id="calc-gpu" min="1500" max="30000" step="250" value="8150" oninput="runFairPriceCalc()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">RAM (GB):</label>
+                        <select id="calc-ram" class="form-control" onchange="runFairPriceCalc()">
+                            <option value="8">8 GB</option>
+                            <option value="16" selected>16 GB</option>
+                            <option value="32">32 GB</option>
+                            <option value="64">64 GB</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Dung lượng Pin (Wh): <span id="calc-bat-val">75 Wh</span></label>
+                        <input type="range" id="calc-bat" min="40" max="99" step="1" value="75" oninput="runFairPriceCalc()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Trọng lượng (kg): <span id="calc-weight-val">1.20 kg</span></label>
+                        <input type="range" id="calc-weight" min="1.0" max="3.0" step="0.05" value="1.20" oninput="runFairPriceCalc()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Card rời NVIDIA RTX:</label>
+                        <select id="calc-rtx" class="form-control" onchange="runFairPriceCalc()">
+                            <option value="0" selected>Không (iGPU đồ họa tích hợp)</option>
+                            <option value="1">Có (RTX Series)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="background: var(--primary-light); padding: 16px 20px; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: #1e40af;">FAIR PRICE DỰ BÁO:</div>
+                        <div id="calc-result" style="font-size: 1.8rem; font-weight: 800; color: var(--primary);">31.08 triệu VND</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.85rem; color: #475569;">Khoảng giá hợp lý (±15%):</div>
+                        <div id="calc-range" style="font-weight: 700; color: #1e293b;">26.42 – 35.74 triệu VND</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TRANG 4: WHAT-IF SIMULATOR ==================== -->
+        <section id="tab-simulator" class="tab-content">
+            <!-- 5 Scenario Cards -->
+            <div class="scenario-grid">
+                <div class="scenario-card" onclick="applyPresetScenario('WS1')">
+                    <div class="scenario-title">WS1: Thắt chặt ngân sách</div>
+                    <div class="scenario-desc">30tr (103 máy) → 20tr (20 máy) → 18tr (4 máy)</div>
+                </div>
+                <div class="scenario-card" onclick="applyPresetScenario('WS2')">
+                    <div class="scenario-title">WS2: Chuyển sang Gaming</div>
+                    <div class="scenario-desc">Tăng trọng số GPU 0.35 → Top 1: MSI Thin 15</div>
+                </div>
+                <div class="scenario-card" onclick="applyPresetScenario('WS3')">
+                    <div class="scenario-title">WS3: SAZO giảm giá 6.9%</div>
+                    <div class="scenario-desc">Zenbook AI 7 350 vượt lên Hạng 1</div>
+                </div>
+                <div class="scenario-card" onclick="applyPresetScenario('WS4')">
+                    <div class="scenario-title">WS4: Di động cứng ≤ 1.3kg</div>
+                    <div class="scenario-desc">Số lựa chọn giảm còn 4, Top 1 giữ nguyên</div>
+                </div>
+                <div class="scenario-card" onclick="applyPresetScenario('WS5')">
+                    <div class="scenario-title">WS5: Hệ sinh thái Apple</div>
+                    <div class="scenario-desc">MacBook ≤ 27tr (2 máy); M5 FPT rẻ hơn CPS 2tr</div>
+                </div>
+            </div>
+
+            <!-- Simulator Control Form -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🎛️ Bảng Điều khiển Kịch bản What-If Thời gian thực</div>
+                    <div>
+                        <button class="btn btn-outline btn-sm" onclick="resetToQ1()">↺ Đặt lại chuẩn Q1</button>
+                    </div>
+                </div>
+                <div class="sim-grid">
+                    <div class="form-group">
+                        <label class="form-label">Ngân sách tối đa: <span id="sim-budget-val">30 triệu</span></label>
+                        <input type="range" id="sim-budget" min="12" max="45" step="1" value="30" oninput="runSimulation()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Trọng số Alpha (Utility): <span id="sim-alpha-val">0.65</span></label>
+                        <input type="range" id="sim-alpha" min="0.50" max="1.00" step="0.05" value="0.65" oninput="runSimulation()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">RAM tối thiểu:</label>
+                        <select id="sim-ram" class="form-control" onchange="runSimulation()">
+                            <option value="8">≥ 8 GB</option>
+                            <option value="16" selected>≥ 16 GB</option>
+                            <option value="32">≥ 32 GB</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">SSD tối thiểu:</label>
+                        <select id="sim-ssd" class="form-control" onchange="runSimulation()">
+                            <option value="256">≥ 256 GB</option>
+                            <option value="512" selected>≥ 512 GB</option>
+                            <option value="1024">≥ 1024 GB (1TB)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ràng buộc Cân nặng:</label>
+                        <select id="sim-weight-mode" class="form-control" onchange="runSimulation()">
+                            <option value="soft" selected>Mềm: Ưu tiên máy nhẹ (Trọng số 50%)</option>
+                            <option value="hard">Cứng: Bắt buộc ≤ 1.30 kg & Pin ≥ 60Wh</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Lọc thương hiệu Apple:</label>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                            <input type="checkbox" id="sim-apple-only" onchange="runSimulation()">
+                            <label for="sim-apple-only" style="font-size: 0.9rem;">Chỉ xem máy Apple (MacBook)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Số lựa chọn đạt chuẩn:</span>
+                        <strong id="sim-result-count" style="font-size: 1.15rem; color: var(--primary); margin-left: 6px;">103</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Quán quân Top-1:</span>
+                        <strong id="sim-result-top1" style="font-size: 1.15rem; color: #0f172a; margin-left: 6px;">ASUS Zenbook 14 @ SAZO</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Điểm DSS cao nhất:</span>
+                        <strong id="sim-result-dss" style="font-size: 1.15rem; color: var(--success); margin-left: 6px;">0.824</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulation Filtered Results Table -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📋 Danh sách Offer Thỏa mãn Kịch bản What-If Hiện tại</div>
+                </div>
+                <div class="table-responsive">
+                    <table id="sim-table">
+                        <thead>
+                            <tr>
+                                <th>Hạng</th>
+                                <th>Mẫu máy</th>
+                                <th>Nhà bán</th>
+                                <th>Giá</th>
+                                <th>Fair Price</th>
+                                <th>Advantage</th>
+                                <th>Utility</th>
+                                <th>Deal</th>
+                                <th>DSS_Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sim-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TRANG 5: CÁ NHÂN HÓA AHP ==================== -->
+        <section id="tab-ahp" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">⚖️ Phân tích Thứ bậc AHP (Analytic Hierarchy Process - Thomas L. Saaty)</div>
+                    <div>
+                        <button class="btn btn-primary" onclick="applyAHPWeightsToSimulator()">🚀 Áp dụng trọng số này vào Simulator</button>
+                    </div>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 18px;">
+                    So sánh mức độ quan trọng giữa từng cặp tiêu chí theo câu hỏi tự nhiên thang đo Saaty 1–9. Hệ thống tự động tính toán vector trọng số riêng và kiểm tra chỉ số nhất quán (CR).
+                </p>
+
+                <!-- 6 Pairwise Comparisons -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px;">
+                    <div class="ahp-pair-row">
+                        <div><strong>CPU</strong> so với <strong>RAM</strong></div>
+                        <select id="ahp-p-cpu-ram" class="form-control" style="width: 220px;" onchange="computeAHP()">
+                            <option value="5">CPU quan trọng hơn nhiều (5)</option>
+                            <option value="3">CPU quan trọng hơn vừa (3)</option>
+                            <option value="1" selected>Quan trọng như nhau (1)</option>
+                            <option value="0.3333">RAM quan trọng hơn vừa (1/3)</option>
+                            <option value="0.2">RAM quan trọng hơn nhiều (1/5)</option>
+                        </select>
+                    </div>
+                    <div class="ahp-pair-row">
+                        <div><strong>CPU</strong> so với <strong>SSD</strong></div>
+                        <select id="ahp-p-cpu-ssd" class="form-control" style="width: 220px;" onchange="computeAHP()">
+                            <option value="5">CPU quan trọng hơn nhiều (5)</option>
+                            <option value="4" selected>CPU quan trọng hơn (4)</option>
+                            <option value="1">Quan trọng như nhau (1)</option>
+                            <option value="0.25">SSD quan trọng hơn (1/4)</option>
+                        </select>
+                    </div>
+                    <div class="ahp-pair-row">
+                        <div><strong>CPU</strong> so với <strong>Cân nặng</strong></div>
+                        <select id="ahp-p-cpu-w" class="form-control" style="width: 220px;" onchange="computeAHP()">
+                            <option value="2">CPU quan trọng hơn (2)</option>
+                            <option value="1">Quan trọng như nhau (1)</option>
+                            <option value="0.5" selected>Cân nặng quan trọng gấp đôi (1/2)</option>
+                            <option value="0.25">Cân nặng quan trọng gấp 4 (1/4)</option>
+                        </select>
+                    </div>
+                    <div class="ahp-pair-row">
+                        <div><strong>RAM</strong> so với <strong>SSD</strong></div>
+                        <select id="ahp-p-ram-ssd" class="form-control" style="width: 220px;" onchange="computeAHP()">
+                            <option value="5">RAM quan trọng hơn nhiều (5)</option>
+                            <option value="3" selected>RAM quan trọng hơn vừa (3)</option>
+                            <option value="1">Quan trọng như nhau (1)</option>
+                            <option value="0.3333">SSD quan trọng hơn (1/3)</option>
+                        </select>
+                    </div>
+                    <div class="ahp-pair-row">
+                        <div><strong>RAM</strong> so với <strong>Cân nặng</strong></div>
+                        <select id="ahp-p-ram-w" class="form-control" style="width: 220px;" onchange="computeAHP()">
+                            <option value="2">RAM quan trọng hơn (2)</option>
+                            <option value="1">Quan trọng như nhau (1)</option>
+                            <option value="0.4154" selected>Cân nặng quan trọng hơn (0.42)</option>
+                            <option value="0.2">Cân nặng quan trọng hơn nhiều (1/5)</option>
+                        </select>
+                    </div>
+                    <div class="ahp-pair-row">
+                        <div><strong>SSD</strong> so với <strong>Cân nặng</strong></div>
+                        <select id="ahp-p-ssd-w" class="form-control" style="width: 220px;" onchange="computeAHP()">
+                            <option value="1">Quan trọng như nhau (1)</option>
+                            <option value="0.25">Cân nặng quan trọng hơn (1/4)</option>
+                            <option value="0.1231" selected>Cân nặng quan trọng hơn nhiều (0.12)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Consistency Status Box -->
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong>Tỷ số Nhất quán (Consistency Ratio - CR):</strong>
+                        <span id="ahp-cr-badge" class="badge-deal">CR = 0.003 (Hợp lệ & Nhất quán)</span>
+                    </div>
+                    <div class="cr-gauge">
+                        <div id="ahp-cr-bar" class="cr-gauge-fill" style="width: 3%; background: var(--success);"></div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                        <span>0.0 (Tuyệt đối nhất quán)</span>
+                        <span>Ngưỡng tối đa chấp nhận: CR &lt; 0.10 (10%)</span>
+                        <span>0.20+ (Bất nhất)</span>
+                    </div>
+                    <div id="ahp-warning-text" style="margin-top: 10px; font-size: 0.85rem; color: var(--danger); display: none;"></div>
+                </div>
+
+                <!-- Resulting Weight Vector -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Trọng số w_CPU</div>
+                        <div class="kpi-value" id="w-cpu-val">0.231</div>
+                        <div class="kpi-subtext">23.1% ưu tiên hiệu năng xử lý</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Trọng số w_RAM</div>
+                        <div class="kpi-value" id="w-ram-val">0.208</div>
+                        <div class="kpi-subtext">20.8% ưu tiên dung lượng RAM</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Trọng số w_SSD</div>
+                        <div class="kpi-value" id="w-ssd-val">0.062</div>
+                        <div class="kpi-subtext">6.2% ưu tiên lưu trữ</div>
+                    </div>
+                    <div class="kpi-card highlight">
+                        <div class="kpi-title">Trọng số w_Cân nặng</div>
+                        <div class="kpi-value" id="w-weight-val">0.500</div>
+                        <div class="kpi-subtext">50.0% ưu tiên máy mỏng nhẹ</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast">Thông báo</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
