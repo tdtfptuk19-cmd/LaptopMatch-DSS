@@ -74,19 +74,19 @@ def test_foreign_key_and_data_fields_integrity(db_session):
         assert offer.price_vnd > 0, f"Giá không hợp lệ: {offer.price_vnd}"
 
 def test_ground_truth_top1_fair_price(db_session):
-    """Kiểm tra offer OBS0164 (Top-1 Q1) khớp chính xác số liệu ASM2."""
+    """Kiểm tra offer OBS0164 (Top-1 Q1) khớp chính xác số liệu ASM2 v7."""
     top1 = db_session.query(Offer).filter(Offer.offer_id == "OBS0164").first()
     assert top1 is not None, "Không tìm thấy OBS0164 trong CSDL"
     
     assert top1.seller_id == "SAZO"
     assert top1.price_vnd == 24_500_000
     
-    # Fair Price phải xấp xỉ 31.08tr VND (sai số < 0.01%)
-    expected_fp = 31080691.97
+    # Fair Price phải xấp xỉ 31.84tr VND (sai số < 0.01%)
+    expected_fp = 31841187.40
     assert abs(top1.fair_price - expected_fp) / expected_fp < 0.001
     
-    # Price advantage xấp xỉ +21.17%
-    expected_adv = 21.1729
+    # Price advantage xấp xỉ +23.06%
+    expected_adv = 23.0556
     assert abs(top1.price_adv - expected_adv) < 0.01
 
 def test_data_quality_auditor(db_session):

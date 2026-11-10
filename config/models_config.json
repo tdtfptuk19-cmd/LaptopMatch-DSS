@@ -1,5 +1,6 @@
 {
   "hedonic_fair_price": {
+    "model_name": "Hedonic GroupKFold Linear 6 đặc trưng",
     "const": 16.514177,
     "cpu_k": 0.013954,
     "gpu_k": 0.016073,
@@ -8,15 +9,22 @@
     "weight_kg": -0.200707,
     "dgpu": 0.147567,
     "r2_in_sample": 0.844856,
-    "r2_out_of_fold": 0.829,
+    "r2_out_of_fold": 0.832,
     "mape_target_pct": 15.0,
-    "mape_actual_pct": 12.585,
+    "mape_actual_pct": 12.80,
+    "sigma_log_residual": 0.166307,
+    "ci_80_pct_lower": -17.0,
+    "ci_80_pct_upper": 25.0,
     "training_sample_size": 209,
     "excluded_outlier_ids": ["OBS0075"]
   },
   "dss_scoring": {
     "default_alpha": 0.65,
+    "sigmoid_kz": 1.5,
     "sigmoid_k": 10.0,
+    "sigma_log": 0.166307,
+    "dear_alert_threshold_z": -1.28,
+    "cheap_threshold_z": 1.28,
     "shop_trust_base": 0.90,
     "shop_trust_warranty_weight": 0.05,
     "shop_trust_return_weight": 0.05,

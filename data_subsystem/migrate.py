@@ -7,13 +7,19 @@ import sys
 import logging
 from datetime import datetime, date
 from pathlib import Path
+
+# Đảm bảo đường dẫn gốc cho phép import package laptopmatch_dss
+WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(WORKSPACE_ROOT) not in sys.path:
+    sys.path.insert(0, str(WORKSPACE_ROOT))
 import numpy as np
 import pandas as pd
 from sqlalchemy.orm import Session
 
 from laptopmatch_dss.config.settings import (
     ORIGINAL_DATASET_PATH,
-    MODELS_CONFIG_PATH
+    MODELS_CONFIG_PATH,
+    BASE_DIR
 )
 from laptopmatch_dss.data_subsystem.db import engine, SessionLocal, init_db
 from laptopmatch_dss.data_subsystem.models import Laptop, Seller, Offer
@@ -116,6 +122,28 @@ def migrate_data(excel_path: Path = ORIGINAL_DATASET_PATH, db: Session = None):
 
         t1_date = date(2026, 10, 8)
 
+        # Tải Fair Price và Price Advantage Out-of-Fold từ data/scored_offers.csv (ASM2 v7)
+        oof_lookup = {}
+        for candidate_path in [
+            BASE_DIR.parent / "data" / "scored_offers.csv",
+            Path("data/scored_offers.csv"),
+            Path(__file__).resolve().parent.parent.parent / "data" / "scored_offers.csv"
+        ]:
+            if candidate_path.exists():
+                try:
+                    df_sc = pd.read_csv(candidate_path)
+                    for _, r_sc in df_sc.iterrows():
+                        oid = str(r_sc.get("observation_id", r_sc.get("offer_id", ""))).strip()
+                        oof_lookup[oid] = {
+                            "fair_price": float(r_sc["fair_price"]),
+                            "price_adv": float(r_sc["price_adv"]),
+                            "shop_trust": float(r_sc["shop_trust"]) if "shop_trust" in r_sc and pd.notna(r_sc["shop_trust"]) else None
+                        }
+                    logger.info(f"Đã nạp {len(oof_lookup)} out-of-fold Fair Price từ: {candidate_path}")
+                    break
+                except Exception as ex:
+                    logger.warning(f"Lỗi đọc {candidate_path}: {ex}")
+
         for _, row in df_master.iterrows():
             obs_id = str(row["observation_id"]).strip()
             laptop_id = str(row["product_id"]).strip()
@@ -187,17 +215,22 @@ def migrate_data(excel_path: Path = ORIGINAL_DATASET_PATH, db: Session = None):
             warranty = int(row.get("warranty_months", 12))
             return_d = int(row.get("return_days", 7))
             
-            # OBS0075 là ngoại lai (R²=0.83 khi loại OBS0075) nhưng vẫn tính FP theo mô hình
-            fp = calculate_hedonic_fair_price(
-                cpu_score=float(row["cpu_benchmark_score"]),
-                gpu_score=float(row["gpu_benchmark_score"]),
-                ram=float(row["ram_gb"]),
-                battery=float(row["battery_wh"]),
-                weight=float(row["weight_kg"]),
-                dgpu=dgpu
-            )
-            adv = (fp - price_vnd) / fp * 100.0
-            trust = calculate_shop_trust(warranty, return_d)
+            # Sử dụng Fair Price Out-of-Fold (v7) nếu có, fallback về mô hình OLS in-sample
+            if obs_id in oof_lookup:
+                fp = oof_lookup[obs_id]["fair_price"]
+                adv = oof_lookup[obs_id]["price_adv"]
+                trust = oof_lookup[obs_id]["shop_trust"] if oof_lookup[obs_id]["shop_trust"] is not None else calculate_shop_trust(warranty, return_d)
+            else:
+                fp = calculate_hedonic_fair_price(
+                    cpu_score=float(row["cpu_benchmark_score"]),
+                    gpu_score=float(row["gpu_benchmark_score"]),
+                    ram=float(row["ram_gb"]),
+                    battery=float(row["battery_wh"]),
+                    weight=float(row["weight_kg"]),
+                    dgpu=dgpu
+                )
+                adv = (fp - price_vnd) / fp * 100.0
+                trust = calculate_shop_trust(warranty, return_d)
 
             # Xử lý Offer (fact_offers)
             existing_offer = db.query(Offer).filter(Offer.offer_id == obs_id).first()

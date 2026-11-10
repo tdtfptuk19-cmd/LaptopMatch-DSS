@@ -30,6 +30,38 @@ logger = logging.getLogger(__name__)
 
 REGISTRY_DIR = BASE_DIR / "models_registry"
 
+SIGMA_LOG = 0.166307  # Độ lệch chuẩn phần dư log trên tập OOF GroupKFold (ASM2 v7)
+
+def calculate_z_score(fair_price: float, price_vnd: float, sigma: float = SIGMA_LOG) -> float:
+    """
+    Tính điểm z-score chuẩn hóa chênh lệch giá theo phân phối sai số phần dư log:
+    z = ln(fair_price / price_vnd) / sigma
+    """
+    if price_vnd <= 0 or fair_price <= 0:
+        return 0.0
+    return float(np.log(fair_price / price_vnd) / sigma)
+
+def calculate_deal(z: float, shop_trust: float, kz: float = 1.5) -> float:
+    """
+    Tính điểm hời chuẩn hóa Deal:
+    Deal = Sigmoid(kz * z) * shop_trust
+    """
+    sig = 1.0 / (1.0 + np.exp(-kz * z))
+    return float(sig * shop_trust)
+
+def classify_pricing_zone(z: float, dear_threshold: float = -1.28, cheap_threshold: float = 1.28) -> str:
+    """
+    Phân loại vùng giá theo phân phối chuẩn phần dư log:
+    - z >= 1.28: Hời (vượt cận trên 80% CI)
+    - z <= -1.28: Đắt ngoài sai số (dưới cận dưới 80% CI, cần cảnh báo)
+    - Còn lại: Trong sai số dự báo
+    """
+    if z >= cheap_threshold:
+        return "Hời"
+    elif z <= dear_threshold:
+        return "Đắt ngoài sai số"
+    return "Trong sai số"
+
 class HedonicPricingModel:
     """
     Bộ quản lý và ước lượng mô hình Hedonic Price Model:
@@ -40,8 +72,9 @@ class HedonicPricingModel:
         self.registry_dir.mkdir(parents=True, exist_ok=True)
         self.coefficients: Dict[str, float] = {}
         self.intercept: float = 0.0
-        self.r_squared: float = 0.0
-        self.mape_5fold: float = 0.0
+        self.r_squared: float = 0.832
+        self.mape_5fold: float = 12.80
+        self.sigma_log: float = SIGMA_LOG
         self.breusch_pagan_pvalue: float = 0.0
         self.sample_size: int = 0
         self.version: str = "init"
@@ -163,6 +196,7 @@ class HedonicPricingModel:
             "sample_size": self.sample_size,
             "r_squared": round(self.r_squared, 4),
             "mape_5fold_pct": round(self.mape_5fold, 2),
+            "sigma_log_residual": self.sigma_log,
             "breusch_pagan_pvalue": round(self.breusch_pagan_pvalue, 5),
             "intercept": self.intercept,
             "coefficients": self.coefficients,
@@ -190,8 +224,9 @@ class HedonicPricingModel:
             self.version = data.get("version", "loaded")
             self.intercept = data["intercept"]
             self.coefficients = data["coefficients"]
-            self.r_squared = data.get("r_squared", 0.83)
-            self.mape_5fold = data.get("mape_5fold_pct", 12.6)
+            self.r_squared = data.get("r_squared", 0.832)
+            self.mape_5fold = data.get("mape_5fold_pct", 12.80)
+            self.sigma_log = data.get("sigma_log_residual", SIGMA_LOG)
             self.breusch_pagan_pvalue = data.get("breusch_pagan_pvalue", 0.018)
             self.sample_size = data.get("sample_size", 209)
             logger.info(f"Đã nạp mô hình từ registry: {self.version}")
@@ -201,20 +236,21 @@ class HedonicPricingModel:
         if MODELS_CONFIG_PATH.exists():
             with open(MODELS_CONFIG_PATH, "r", encoding="utf-8") as f:
                 cfg = json.load(f)
-            hed = cfg.get("hedonic_model", {})
-            self.intercept = hed["beta_0_intercept"]
+            hed = cfg.get("hedonic_fair_price", cfg.get("hedonic_model", {}))
+            self.intercept = hed.get("const", hed.get("beta_0_intercept", 16.514177))
             self.coefficients = {
-                "cpu_k": hed["beta_cpu_k"],
-                "gpu_k": hed["beta_gpu_k"],
-                "ram_gb": hed["beta_ram_gb"],
-                "battery_wh": hed["beta_battery_wh"],
-                "weight_kg": hed["beta_weight_kg"],
-                "dgpu": hed["beta_dgpu_rtx"]
+                "cpu_k": hed.get("cpu_k", hed.get("beta_cpu_k", 0.013954)),
+                "gpu_k": hed.get("gpu_k", hed.get("beta_gpu_k", 0.016073)),
+                "ram_gb": hed.get("ram_gb", hed.get("beta_ram_gb", 0.009088)),
+                "battery_wh": hed.get("battery_wh", hed.get("beta_battery_wh", 0.004434)),
+                "weight_kg": hed.get("weight_kg", hed.get("beta_weight_kg", -0.200707)),
+                "dgpu": hed.get("dgpu", hed.get("beta_dgpu_rtx", 0.147567))
             }
-            self.r_squared = hed.get("r_squared", 0.83)
-            self.mape_5fold = hed.get("mape_pct", 12.6)
-            self.sample_size = hed.get("sample_size", 209)
-            self.version = "default_asm2_config"
+            self.r_squared = hed.get("r2_out_of_fold", hed.get("r_squared", 0.832))
+            self.mape_5fold = hed.get("mape_actual_pct", hed.get("mape_pct", 12.80))
+            self.sigma_log = hed.get("sigma_log_residual", SIGMA_LOG)
+            self.sample_size = hed.get("training_sample_size", hed.get("sample_size", 209))
+            self.version = "default_asm2_v7_config"
             logger.info("Đã nạp tham số mô hình mặc định từ models_config.json.")
             return
 

@@ -100,7 +100,7 @@ class LLMAdvisor:
         return (
             "Dựa trên cơ sở tri thức hệ thống LaptopMatch DSS, với nhu cầu lập trình và học tập, "
             "hệ thống khuyến nghị lựa chọn máy có RAM tối thiểu 16GB, SSD 512GB, ưu tiên máy mỏng nhẹ dưới 1.4kg. "
-            "Lựa chọn quán quân hiện tại là ASUS Zenbook 14 2025 tại SAZO (giá 24.5 triệu, tiết kiệm 6.58 triệu so với Fair Price)."
+            "Lựa chọn quán quân hiện tại là ASUS Zenbook 14 2025 tại SAZO (giá 24.5 triệu, Fair Price 31.84 triệu, tiết kiệm 7.34 triệu)."
         )
 
     def consult(self, user_question: str) -> Dict[str, Any]:
@@ -130,8 +130,8 @@ class LLMAdvisor:
             prompt_context = (
                 "Bạn là Cố vấn Quyết định Mua Laptop LaptopMatch DSS (môn học DSS301). "
                 "TUYỆT ĐỐI không bịa số liệu. Chỉ sử dụng số liệu có thực: "
-                "Cấu hình chuẩn Q1: ASUS Zenbook 14 @ SAZO (giá 24.5tr, Fair Price 31.08tr, Deal hời +21.2%, DSS=0.8237, nặng 1.2kg). "
-                "HP Elitebook 6 G1a @ SAZO (giá 20.5tr, Fair Price 30.13tr, Deal hời +32.0%, DSS=0.8051). "
+                "Cấu hình chuẩn Q1: ASUS Zenbook 14 @ SAZO (giá 24.5tr, Fair Price 31.84tr, Deal hời +23.1%, DSS=0.8310, nặng 1.2kg). "
+                "HP Elitebook 6 G1a @ SAZO (giá 20.5tr, Fair Price 30.34tr, Deal hời +32.4%, DSS=0.8086). "
                 "Hãy trả lời súc tích, chuyên nghiệp bằng tiếng Việt, phân tích rõ giữa Điểm kỹ thuật (Utility) và Độ hời tài chính (Deal)."
             )
             payload = {

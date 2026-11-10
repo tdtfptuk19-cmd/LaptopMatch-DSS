@@ -54,7 +54,7 @@ def test_regression_test_q1_top5_and_dss_scores():
     eligible_df = df[df["eligible"] == 1]
     
     # Ràng buộc số lượng đạt chuẩn Q1
-    assert len(eligible_df) == 103, f"Số offer đạt Eligibility phải là 103, thực tế: {len(eligible_df)}"
+    assert len(eligible_df) == 82, f"Số offer đạt Eligibility phải là 82, thực tế: {len(eligible_df)}"
 
     # Kiểm tra Top 1: ASUS Zenbook 14 2025 Bạc @ SAZO (OBS0164)
     top1 = eligible_df.iloc[0]
@@ -66,12 +66,12 @@ def test_regression_test_q1_top5_and_dss_scores():
 
     # Kiểm tra các chỉ số thành phần Top 1 với độ sai số cực nhỏ (<= 1e-4)
     assert abs(top1["utility"] - 0.802312) < 0.001, f"Utility lệch: {top1['utility']} != 0.8023"
-    assert abs(top1["deal"] - 0.863467) < 0.001, f"Deal lệch: {top1['deal']} != 0.8635"
-    assert abs(top1["dss_score"] - 0.823716) < 0.001, f"DSS_Score lệch: {top1['dss_score']} != 0.8237"
-    assert abs(top1["price_adv"] - 21.1729) < 0.01, f"Adv lệch: {top1['price_adv']} != 21.17%"
+    assert abs(top1["deal"] - 0.884227) < 0.001, f"Deal lệch: {top1['deal']} != 0.8842"
+    assert abs(top1["dss_score"] - 0.830983) < 0.001, f"DSS_Score lệch: {top1['dss_score']} != 0.8310"
+    assert abs(top1["price_adv"] - 23.0556) < 0.01, f"Adv lệch: {top1['price_adv']} != 23.06%"
 
     # Kiểm tra thứ tự chính xác của Top 5 offer
-    expected_top5_ids = ["OBS0164", "OBS0202", "OBS0128", "OBS0181", "OBS0144"]
+    expected_top5_ids = ["OBS0164", "OBS0202", "OBS0128", "OBS0181", "OBS0172"]
     actual_top5_ids = eligible_df.head(5)["offer_id"].tolist()
     assert actual_top5_ids == expected_top5_ids, f"Top 5 không trùng khớp: {actual_top5_ids} != {expected_top5_ids}"
 
@@ -113,25 +113,28 @@ def test_whatif_scenarios():
     """Kiểm tra sự chính xác của cả 5 kịch bản What-if từ ASM2."""
     whatif = WhatIfEngine()
     try:
-        # WS1: 30tr -> 20tr -> 18tr
+        # WS1: 30tr -> 25tr -> 22tr -> 20tr -> 18tr
         ws1 = whatif.run_ws1_budget_tightening()
-        assert ws1["details"]["30tr"]["eligible_count"] == 103
-        assert ws1["details"]["20tr"]["eligible_count"] == 20
-        assert ws1["details"]["18tr"]["eligible_count"] == 4
+        assert ws1["details"]["30tr"]["eligible_count"] == 82
+        assert ws1["details"]["25tr"]["eligible_count"] == 42
+        assert ws1["details"]["22tr"]["eligible_count"] == 28
+        assert ws1["details"]["20tr"]["eligible_count"] == 12
+        assert ws1["details"]["18tr"]["eligible_count"] == 1
 
         # WS2: Gaming -> Quán quân chuyển sang MSI Gaming Thin 15 @ FPT
         ws2 = whatif.run_ws2_gaming_shift()
         assert ws2["details"]["top1"]["brand"] == "MSI"
         assert "Gaming Thin" in ws2["details"]["top1"]["model"]
         assert ws2["details"]["top1"]["seller_id"] == "FPT"
-        assert abs(ws2["details"]["top1"]["dss_score"] - 0.793) < 0.005
+        assert abs(ws2["details"]["top1"]["dss_score"] - 0.797) < 0.005
 
         # WS3: SAZO giảm giá Zenbook AI 7 350
-        ws3 = whatif.run_ws3_price_discount(discount_pcts=[0.0, 5.0, 6.9, 10.0])
+        ws3 = whatif.run_ws3_price_discount(discount_pcts=[0.0, 5.0, 8.05, 8.1, 10.0])
         steps = {s["discount_pct"]: s for s in ws3["simulation_steps"]}
         assert steps[0.0]["rank"] > 1
         assert steps[5.0]["rank"] > 1
-        assert steps[6.9]["rank"] == 1, "Tại mức giảm 6.9%, Zenbook AI 7 350 phải lên hạng 1"
+        assert steps[8.1]["rank"] == 1, "Tại mức giảm >= 8.05% (8.1%), Zenbook AI 7 350 phải lên hạng 1"
+        assert steps[10.0]["rank"] == 1
 
         # WS4: Ràng buộc di động cứng -> 4 lựa chọn, Quán quân vẫn là Zenbook 14
         ws4 = whatif.run_ws4_portability_constraint()

@@ -62,7 +62,7 @@ class DeploymentVerifier:
         # 1. Health Check
         results.append(self._test_health())
 
-        # 2. Q1 Regression Test (Top-1, 103 offers, DSS 0.8237)
+        # 2. Q1 Regression Test (Top-1, 82 offers, DSS 0.8310)
         results.append(self._test_recommend_q1())
 
         # 3. AHP Saaty Consistency Test
@@ -124,9 +124,9 @@ class DeploymentVerifier:
                 data = res.json()
                 top1 = data["top_offers"][0]
                 is_obs164 = top1["offer_id"] == "OBS0164"
-                is_103 = data["total_eligible"] == 103
-                dss_correct = abs(top1["dss_score"] - 0.8237) < 0.005
-                if is_obs164 and is_103 and dss_correct:
+                is_82 = data["total_eligible"] == 82
+                dss_correct = abs(top1["dss_score"] - 0.8310) < 0.005
+                if is_obs164 and is_82 and dss_correct:
                     return ("2. Bài kiểm tra Hồi quy Q1 (Top 1)", True, f"Top-1: {top1['model']} (DSS={top1['dss_score']}, {data['total_eligible']}/210)")
                 return ("2. Bài kiểm tra Hồi quy Q1 (Top 1)", False, f"Lệch Top-1: {top1['offer_id']}, Eligible: {data['total_eligible']}")
             return ("2. Bài kiểm tra Hồi quy Q1 (Top 1)", False, f"Status {res.status_code}")
@@ -151,10 +151,10 @@ class DeploymentVerifier:
         try:
             ws1 = self._post("/api/whatif", {"scenario_type": "WS1"}).json()
             ws2 = self._post("/api/whatif", {"scenario_type": "WS2"}).json()
-            ws1_ok = ws1["details"]["30tr"]["eligible_count"] == 103 and ws1["details"]["20tr"]["eligible_count"] == 20
+            ws1_ok = ws1["details"]["30tr"]["eligible_count"] == 82 and ws1["details"]["20tr"]["eligible_count"] == 12
             ws2_ok = ws2["details"]["top1"]["brand"] == "MSI"
             if ws1_ok and ws2_ok:
-                return ("4. Động cơ What-If (WS1 - WS5)", True, "WS1 (103->20), WS2 (MSI Gaming Thin)")
+                return ("4. Động cơ What-If (WS1 - WS5)", True, "WS1 (82->12), WS2 (MSI Gaming Thin)")
             return ("4. Động cơ What-If (WS1 - WS5)", False, "Kịch bản WS1/WS2 sai số liệu")
         except Exception as e:
             return ("4. Động cơ What-If (WS1 - WS5)", False, str(e))

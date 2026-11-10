@@ -92,11 +92,13 @@ def load_persona(persona_key: str = "Q1") -> Dict[str, Any]:
             cfg = json.load(f)
         if persona_key in cfg:
             raw = cfg[persona_key].copy()
+            kz_val = float(raw.get("kz", raw.get("k", 1.5)))
             p = {
                 "name": raw.get("name", persona_key),
                 "budget": float(raw.get("budget", 30_000_000)),
                 "alpha": float(raw.get("alpha", 0.65)),
-                "k": float(raw.get("k", 10.0)),
+                "kz": kz_val,
+                "k": kz_val,
                 "w": raw.get("w", raw.get("weights_w", {})),
                 "r": raw.get("r", raw.get("thresholds_r", {})),
             }
@@ -109,13 +111,14 @@ def load_persona(persona_key: str = "Q1") -> Dict[str, Any]:
             p["hard"] = hard
             return p
 
-    # Fallback mặc định Q1
+    # Fallback mặc định Q1 (ASM2 v7: 82 offer đạt chuẩn)
     return {
         "name": "Q1 – SV lập trình, <= 30 tr, ưu tiên máy nhẹ",
         "budget": 30_000_000,
         "alpha": 0.65,
-        "k": 10.0,
-        "hard": [("ram_gb", ">=", 16), ("ssd_gb", ">=", 512)],
+        "kz": 1.5,
+        "k": 1.5,
+        "hard": [("ram_gb", ">=", 16), ("ssd_gb", ">=", 512), ("cpu_benchmark_score", ">=", 18000)],
         "r": {"cpu": 18000, "ram": 16, "ssd": 512, "w": 1.5},
         "w": {"cpu": 0.5 * 0.4615, "ram": 0.5 * 0.4154, "ssd": 0.5 * 0.1231, "w": 0.5}
     }
@@ -242,9 +245,17 @@ class DSSScoringEngine:
 
         c["utility"] = utility
 
-        # 2. Tính Deal: Sigmoid(k * Price_Adv / 100) * Shop_Trust
-        k_sigmoid = float(persona.get("k", 10.0))
-        c["deal"] = sigmoid(k_sigmoid * c["price_adv"].values / 100.0) * c["shop_trust"].values
+        # 2. Tính Deal: Sigmoid(kz * z) * Shop_Trust với z = ln(fair_price / price_vnd) / sigma
+        SIGMA_LOG = 0.166307
+        kz = float(persona.get("kz", 1.5))
+        if "kz" not in persona and float(persona.get("k", 1.5)) == 10.0:
+            kz = 1.5
+
+        if "z" not in c.columns or c["z"].isnull().all():
+            z_scores = np.log(c["fair_price"].values / c["price_vnd"].values) / SIGMA_LOG
+            c["z"] = z_scores
+
+        c["deal"] = sigmoid(kz * c["z"].values) * c["shop_trust"].values
 
         # 3. Tính Eligibility
         budget = float(persona.get("budget", 30_000_000))
@@ -252,6 +263,12 @@ class DSSScoringEngine:
         
         for hard_rule in persona.get("hard", []):
             col, op, val = hard_rule
+            # Ánh xạ tên cột tương đương nếu cần
+            if col not in c.columns and col == "cpu_benchmark_score" and "cpu_benchmark" in c.columns:
+                col = "cpu_benchmark"
+            elif col not in c.columns and col == "cpu_benchmark" and "cpu_benchmark_score" in c.columns:
+                col = "cpu_benchmark_score"
+
             if col in c.columns:
                 if op == ">=":
                     el &= (c[col] >= val)

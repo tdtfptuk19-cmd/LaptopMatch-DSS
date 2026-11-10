@@ -2,7 +2,7 @@
 test_api.py - Unit & Integration tests cho Backend API (Giai đoạn 3)
 Kiểm thử toàn diện:
 1. Endpoint /api/health và Middleware độ trễ (X-Process-Time-Ms)
-2. Endpoint /api/recommend: kiểm tra hồi quy Q1 (OBS0164, 103 eligible, Top 5)
+2. Endpoint /api/recommend: kiểm tra hồi quy Q1 (OBS0164, 82 eligible, Top 5)
 3. Endpoint /api/ahp/calculate: ma trận nhất quán và ma trận bất nhất
 4. Endpoint /api/whatif: các kịch bản WS1-WS5 và kịch bản tùy biến
 5. Endpoint /api/models/hedonic: thông số mô hình và hệ số beta
@@ -37,7 +37,7 @@ def test_recommend_q1_regression(client):
     assert response.status_code == 200
     data = response.json()
 
-    assert data["total_eligible"] == 103
+    assert data["total_eligible"] == 82
     assert len(data["top_offers"]) == 10
 
     # Top 1 phải là OBS0164 @ SAZO
@@ -49,8 +49,8 @@ def test_recommend_q1_regression(client):
     assert top1["seller_id"] == "SAZO"
     assert top1["price_vnd"] == 24_500_000
     assert abs(top1["utility"] - 0.8023) < 0.001
-    assert abs(top1["deal"] - 0.8635) < 0.001
-    assert abs(top1["dss_score"] - 0.8237) < 0.001
+    assert abs(top1["deal"] - 0.8842) < 0.001
+    assert abs(top1["dss_score"] - 0.8310) < 0.001
     assert top1["expensive_warning"] is False
 
     # Điểm tiêu chí S_k
@@ -60,7 +60,7 @@ def test_recommend_q1_regression(client):
 
     # Kiểm tra thứ tự Top 5
     top5_ids = [o["offer_id"] for o in data["top_offers"][:5]]
-    assert top5_ids == ["OBS0164", "OBS0202", "OBS0128", "OBS0181", "OBS0144"]
+    assert top5_ids == ["OBS0164", "OBS0202", "OBS0128", "OBS0181", "OBS0172"]
 
 def test_recommend_with_custom_filters(client):
     """Kiểm tra gợi ý với bộ lọc tùy biến (ngân sách 20tr, lọc hãng Apple)."""
@@ -68,7 +68,7 @@ def test_recommend_with_custom_filters(client):
     res_budget = client.post("/api/recommend", json={"persona_id": "Q1", "budget": 20_000_000})
     assert res_budget.status_code == 200
     data_budget = res_budget.json()
-    assert data_budget["total_eligible"] == 20
+    assert data_budget["total_eligible"] == 12
 
     # Lọc thương hiệu Apple
     res_apple = client.post("/api/recommend", json={"persona_id": "Q1", "brand": "Apple", "budget": 36_000_000})
@@ -115,8 +115,8 @@ def test_whatif_endpoints(client):
     # WS1
     res_ws1 = client.post("/api/whatif", json={"scenario_type": "WS1"})
     assert res_ws1.status_code == 200
-    assert res_ws1.json()["details"]["30tr"]["eligible_count"] == 103
-    assert res_ws1.json()["details"]["20tr"]["eligible_count"] == 20
+    assert res_ws1.json()["details"]["30tr"]["eligible_count"] == 82
+    assert res_ws1.json()["details"]["20tr"]["eligible_count"] == 12
 
     # WS2
     res_ws2 = client.post("/api/whatif", json={"scenario_type": "WS2"})
@@ -124,10 +124,10 @@ def test_whatif_endpoints(client):
     assert res_ws2.json()["details"]["top1"]["brand"] == "MSI"
 
     # WS3
-    res_ws3 = client.post("/api/whatif", json={"scenario_type": "WS3", "discount_cut_pct": 6.9})
+    res_ws3 = client.post("/api/whatif", json={"scenario_type": "WS3", "discount_cut_pct": 8.1})
     assert res_ws3.status_code == 200
     steps = {s["discount_pct"]: s for s in res_ws3.json()["details"]}
-    assert steps[6.9]["rank"] == 1
+    assert steps[8.1]["rank"] == 1
 
 def test_hedonic_model_metadata_endpoint(client):
     """Kiểm tra lấy metadata mô hình định giá Hedonic."""

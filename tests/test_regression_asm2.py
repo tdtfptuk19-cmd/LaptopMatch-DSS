@@ -17,11 +17,11 @@ GROUND_TRUTH_Q1 = [
         "model": "Zenbook 14 2025 Bạc",
         "seller_id": "SAZO",
         "price_vnd": 24500000.0,
-        "fair_price": 31079610.46238874,
-        "price_adv": 21.170183166713468,
+        "fair_price": 31841187.39580011,
+        "price_adv": 23.05563327317505,
         "utility": 0.8023121481846327,
-        "deal": 0.8634415279309662,
-        "dss_score": 0.8237074310958494
+        "deal": 0.8842265055177242,
+        "dss_score": 0.8309821732512147
     },
     {
         "offer_id": "OBS0202",
@@ -30,11 +30,11 @@ GROUND_TRUTH_Q1 = [
         "model": "Elitebook 6 G1a 14 2025 R7 H255 24GB",
         "seller_id": "SAZO",
         "price_vnd": 20500000.0,
-        "fair_price": 30130438.06004617,
-        "price_adv": 31.9624893632609,
+        "fair_price": 30335639.05693724,
+        "price_adv": 32.42271916037976,
         "utility": 0.7640254106388966,
-        "deal": 0.8813312885500294,
-        "dss_score": 0.805082467907793
+        "deal": 0.8913919616450449,
+        "dss_score": 0.8086037034910485
     },
     {
         "offer_id": "OBS0128",
@@ -43,11 +43,11 @@ GROUND_TRUTH_Q1 = [
         "model": "Lecoo 14 N143C (2026)",
         "seller_id": "T&T Center",
         "price_vnd": 19290000.0,
-        "fair_price": 22580998.1328951,
-        "price_adv": 14.574192484879159,
+        "fair_price": 22871991.07407724,
+        "price_adv": 15.66103739056199,
         "utility": 0.804232934843794,
-        "deal": 0.7705807562767133,
-        "dss_score": 0.7924546723453156
+        "deal": 0.7817731677647368,
+        "dss_score": 0.7963720163661239
     },
     {
         "offer_id": "OBS0181",
@@ -56,24 +56,24 @@ GROUND_TRUTH_Q1 = [
         "model": "Zenbook 14 2025 AI 7 350",
         "seller_id": "SAZO",
         "price_vnd": 29300000.0,
-        "fair_price": 32855499.45518633,
-        "price_adv": 10.821626559157616,
+        "fair_price": 33136463.137860443,
+        "price_adv": 11.577768942627582,
         "utility": 0.8272719783281733,
-        "deal": 0.7225474941672829,
-        "dss_score": 0.7906184088718617
+        "deal": 0.7275699527080908,
+        "dss_score": 0.7923762693611445
     },
     {
-        "offer_id": "OBS0144",
+        "offer_id": "OBS0172",
         "rank": 5,
         "brand": "Lenovo",
-        "model": "Lecoo Pro 14 N155A (2026)",
-        "seller_id": "T&T Center",
-        "price_vnd": 25890000.0,
-        "fair_price": 33312432.712471165,
-        "price_adv": 22.281268908026735,
-        "utility": 0.751508881227132,
-        "deal": 0.8576096820427049,
-        "dss_score": 0.7886441615125825
+        "model": "Xiaoxin Air 13 2026",
+        "seller_id": "SAZO",
+        "price_vnd": 20400000.0,
+        "fair_price": 24545172.853958968,
+        "price_adv": 16.887935068220063,
+        "utility": 0.7941574514494794,
+        "deal": 0.7718613793622264,
+        "dss_score": 0.7863538262189409
     }
 ]
 

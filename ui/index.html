@@ -37,18 +37,18 @@
             <div class="kpi-grid">
                 <div class="kpi-card highlight">
                     <div class="kpi-title">DSS Hạng 1 (Q1)</div>
-                    <div class="kpi-value" id="kpi-top1-dss">0.824</div>
+                    <div class="kpi-value" id="kpi-top1-dss">0.831</div>
                     <div class="kpi-subtext" id="kpi-top1-name">ASUS Zenbook 14 @ SAZO</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-title">Lựa chọn đạt chuẩn</div>
-                    <div class="kpi-value" id="kpi-eligible-count">103</div>
-                    <div class="kpi-subtext">Trên tổng số 210 offer (49.0%)</div>
+                    <div class="kpi-value" id="kpi-eligible-count">82</div>
+                    <div class="kpi-subtext">Trên tổng số 210 offer (39.0%)</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-title">Sai số Hedonic (MAPE)</div>
-                    <div class="kpi-value" style="color: var(--success);">12.6%</div>
-                    <div class="kpi-subtext">Mục tiêu ≤ 15.0% (R² = 0.83)</div>
+                    <div class="kpi-value" style="color: var(--success);">12.8%</div>
+                    <div class="kpi-subtext">Mục tiêu ≤ 15.0% (R² = 0.832)</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-title">Vi phạm ràng buộc Top-5</div>
@@ -57,7 +57,7 @@
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-title">Tiết kiệm trung bình Top-5</div>
-                    <div class="kpi-value" style="color: var(--primary);">6.1 tr</div>
+                    <div class="kpi-value" style="color: var(--primary);">5.75 tr</div>
                     <div class="kpi-subtext">So với giá trị thực tế Fair Price</div>
                 </div>
                 <div class="kpi-card">
@@ -164,17 +164,17 @@
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-title">Hệ số xác định R²</div>
-                    <div class="kpi-value">0.83</div>
-                    <div class="kpi-subtext">Giải thích 83% biến động giá</div>
+                    <div class="kpi-value">0.832</div>
+                    <div class="kpi-subtext">Giải thích 83.2% biến động giá (GroupKFold)</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-title">Sai số dự báo MAPE</div>
-                    <div class="kpi-value" style="color: var(--success);">12.6%</div>
-                    <div class="kpi-subtext">5-fold Cross-Validation (≤ 15%)</div>
+                    <div class="kpi-value" style="color: var(--success);">12.8%</div>
+                    <div class="kpi-subtext">GroupKFold Cross-Validation (≤ 15%)</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-title">Khoảng dự báo 80%</div>
-                    <div class="kpi-value" style="font-size: 1.4rem;">[-18%; +24%]</div>
+                    <div class="kpi-value" style="font-size: 1.4rem;">[-17%; +25%]</div>
                     <div class="kpi-subtext">Dải tin cậy định giá thị trường</div>
                 </div>
             </div>
@@ -244,19 +244,19 @@
             <div class="scenario-grid">
                 <div class="scenario-card" onclick="applyPresetScenario('WS1')">
                     <div class="scenario-title">WS1: Thắt chặt ngân sách</div>
-                    <div class="scenario-desc">30tr (103 máy) → 20tr (20 máy) → 18tr (4 máy)</div>
+                    <div class="scenario-desc">30tr (82 máy) → 20tr (12 máy) → 18tr (1 máy)</div>
                 </div>
                 <div class="scenario-card" onclick="applyPresetScenario('WS2')">
                     <div class="scenario-title">WS2: Chuyển sang Gaming</div>
-                    <div class="scenario-desc">Tăng trọng số GPU 0.35 → Top 1: MSI Thin 15</div>
+                    <div class="scenario-desc">Tăng trọng số GPU 0.35 → Top 1: MSI Gaming Thin 15</div>
                 </div>
                 <div class="scenario-card" onclick="applyPresetScenario('WS3')">
-                    <div class="scenario-title">WS3: SAZO giảm giá 6.9%</div>
-                    <div class="scenario-desc">Zenbook AI 7 350 vượt lên Hạng 1</div>
+                    <div class="scenario-title">WS3: SAZO giảm giá 8.05%</div>
+                    <div class="scenario-desc">Zenbook AI 7 350 vượt lên Hạng 1 (giá ≤ 26.94tr)</div>
                 </div>
                 <div class="scenario-card" onclick="applyPresetScenario('WS4')">
                     <div class="scenario-title">WS4: Di động cứng ≤ 1.3kg</div>
-                    <div class="scenario-desc">Số lựa chọn giảm còn 4, Top 1 giữ nguyên</div>
+                    <div class="scenario-desc">82 lựa chọn giảm còn 4, Top 1 giữ nguyên</div>
                 </div>
                 <div class="scenario-card" onclick="applyPresetScenario('WS5')">
                     <div class="scenario-title">WS5: Hệ sinh thái Apple</div>
@@ -316,7 +316,7 @@
                 <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div>
                         <span style="font-size: 0.85rem; color: var(--text-muted);">Số lựa chọn đạt chuẩn:</span>
-                        <strong id="sim-result-count" style="font-size: 1.15rem; color: var(--primary); margin-left: 6px;">103</strong>
+                        <strong id="sim-result-count" style="font-size: 1.15rem; color: var(--primary); margin-left: 6px;">82</strong>
                     </div>
                     <div>
                         <span style="font-size: 0.85rem; color: var(--text-muted);">Quán quân Top-1:</span>
@@ -324,7 +324,7 @@
                     </div>
                     <div>
                         <span style="font-size: 0.85rem; color: var(--text-muted);">Điểm DSS cao nhất:</span>
-                        <strong id="sim-result-dss" style="font-size: 1.15rem; color: var(--success); margin-left: 6px;">0.824</strong>
+                        <strong id="sim-result-dss" style="font-size: 1.15rem; color: var(--success); margin-left: 6px;">0.831</strong>
                     </div>
                 </div>
             </div>

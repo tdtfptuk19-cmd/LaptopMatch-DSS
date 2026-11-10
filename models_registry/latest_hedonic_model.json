@@ -1,10 +1,11 @@
 {
-  "version": "hedonic_ols_hc3_20261008_013704",
-  "created_at": "2026-11-10T01:37:04.203875",
+  "version": "hedonic_ols_hc3_20261008_113920",
+  "created_at": "2026-11-10T11:39:20.451722",
   "snapshot_date": "2026-10-08",
   "sample_size": 209,
   "r_squared": 0.8449,
   "mape_5fold_pct": 12.58,
+  "sigma_log_residual": 0.166307,
   "breusch_pagan_pvalue": 0.01864,
   "intercept": 16.51417708294569,
   "coefficients": {

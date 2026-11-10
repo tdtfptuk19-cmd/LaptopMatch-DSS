@@ -125,10 +125,10 @@ laptopmatch_dss/
    - Module kiểm toán chất lượng dữ liệu: phát hiện missing, duplicate, và ngoại lai `OBS0075`.
 
 2. **Model Management Subsystem (`model_subsystem/`)**:
-   - **Hedonic Pricing Model**: $\ln(\text{Fair Price}) = 16.514 + 0.01395\cdot\text{CPU} + 0.01607\cdot\text{GPU} + 0.00909\cdot\text{RAM} + 0.00443\cdot\text{Pin} - 0.2007\cdot\text{Weight} + 0.1476\cdot\text{RTX}$. Đạt $R^2 = 0.84$, 5-fold CV MAPE = $12.58\%$ ($\le 15\%$), Breusch-Pagan $p = 0.0186 < 0.05$ (HC3).
-   - **DSS Multi-criteria Scoring**: $S_k$, điểm $\text{Utility} = \sum w_k S_k$, điểm $\text{Deal} = \sigma(10 \cdot \frac{\text{Adv}}{100}) \cdot \text{Shop\_Trust}$, điểm $\text{DSS\_Score} = \text{Eligibility} \times [\alpha\cdot\text{Utility} + (1-\alpha)\cdot\text{Deal}]$.
+   - **Hedonic Pricing Model**: Linear 6 đặc trưng (GroupKFold Cross-Validation OOF) với $\ln(\text{Fair Price}) = 16.514 + 0.01395\cdot\text{CPU} + 0.01607\cdot\text{GPU} + 0.00909\cdot\text{RAM} + 0.00443\cdot\text{Pin} - 0.2007\cdot\text{Weight} + 0.1476\cdot\text{RTX}$. Đạt OOF $R^2 = 0.832$, GroupKFold MAPE = $12.80\%$ ($\le 15\%$), $\sigma_{\log} = 0.166307$, 80% CI $[-17\%, +25\%]$, Breusch-Pagan $p = 0.0186 < 0.05$ (HC3).
+   - **DSS Multi-criteria Scoring**: $S_k$, điểm $\text{Utility} = \sum w_k S_k$, điểm $\text{Deal} = \sigma(1.5 \cdot z) \cdot \text{Shop\_Trust}$ với $z = \ln(\text{Fair Price} / \text{Price}) / \sigma_{\log}$, điểm $\text{DSS\_Score} = \text{Eligibility} \times [\alpha\cdot\text{Utility} + (1-\alpha)\cdot\text{Deal}]$. (Q1 chuẩn hóa `CPU >= 18,000` cho ra 82 offer đạt chuẩn, Top-1 ASUS Zenbook 14 @ SAZO đạt `DSS = 0.8310`).
    - **AHP Saaty 1–9**: Tính vector trọng số bằng Principal Eigenvector và Geometric Mean; đo lường tỷ số nhất quán $CR$; từ chối hoặc cảnh báo nếu $CR \ge 0.10$.
-   - **What-If Engine**: Tái hiện chính xác 5 kịch bản WS1–WS5 và mô phỏng tùy ý.
+   - **What-If Engine**: Tái hiện chính xác các kịch bản WS1–WS6 (WS1: 82→42→28→12→1; WS3 hòa vốn giảm `8.05%` / `26.94M`; WS4: 82→4) và mô phỏng tùy ý.
 
 3. **User Interface / Dialog Subsystem (`ui/` & `api/`)**:
    - Giao diện người dùng tuân thủ nguyên tắc Miller $7 \pm 2$, Edward Tufte Data-Ink Ratio, Don Norman & Alan Cooper HCI:

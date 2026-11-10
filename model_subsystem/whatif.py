@@ -3,7 +3,7 @@ whatif.py - Động cơ mô phỏng kịch bản What-If (Model Management Subsy
 Tái hiện 5 kịch bản What-if chính thức từ ASM2:
 - WS1: Thắt chặt ngân sách (30tr -> 20tr -> 18tr)
 - WS2: Chuyển đổi nhu cầu sang Gaming / Đồ họa (w_GPU = 0.35)
-- WS3: Nhà bán giảm giá cạnh tranh (SAZO giảm Zenbook AI 7 350 >= 6.9% lên hạng 1)
+- WS3: Nhà bán giảm giá cạnh tranh (SAZO giảm Zenbook AI 7 350 >= 8.05% lên hạng 1)
 - WS4: Ràng buộc di động cứng (Cân nặng <= 1.3kg & Pin >= 60Wh)
 - WS5: Khảo sát hệ sinh thái Apple (MacBook <= 27tr và so sánh M5 giữa FPT và CPS)
 Và hỗ trợ mô phỏng tùy ý (Custom What-if) theo mọi tham số đầu vào.
@@ -86,13 +86,13 @@ class WhatIfEngine:
 
     def run_ws1_budget_tightening(self) -> Dict[str, Any]:
         """
-        WS1: Khảo sát thắt chặt ngân sách: 30tr -> 20tr -> 18tr.
-        Kết luận: 30tr (103 lựa chọn), 20tr (20 lựa chọn), 18tr (4 lựa chọn).
+        WS1: Khảo sát thắt chặt ngân sách: 30tr -> 25tr -> 22tr -> 20tr -> 18tr.
+        Kết luận: 30tr (82 lựa chọn), 25tr (42 lựa chọn), 22tr (28 lựa chọn), 20tr (12 lựa chọn), 18tr (1 lựa chọn).
         Khuyến nghị: Ngân sách tối thiểu cho lập trình (16GB RAM/512GB SSD) là 20 triệu.
         """
         q1 = load_persona("Q1")
         results = {}
-        for b in [30_000_000, 20_000_000, 18_000_000]:
+        for b in [30_000_000, 25_000_000, 22_000_000, 20_000_000, 18_000_000]:
             p = {**q1, "budget": b}
             df = self.scoring_engine.evaluate(p, self._cached_base_df)
             kpi = self._extract_kpi(df)
@@ -100,7 +100,7 @@ class WhatIfEngine:
 
         return {
             "scenario": "WS1 – Thắt chặt ngân sách",
-            "findings": "Ngân sách 30tr: 103 lựa chọn; giảm xuống 20tr: còn 20; giảm xuống 18tr: còn 4 lựa chọn.",
+            "findings": "Ngân sách 30tr: 82 lựa chọn; 25tr: 42; 22tr: 28; giảm xuống 20tr: còn 12; giảm xuống 18tr: còn 1 lựa chọn.",
             "recommendation": "R5: SV lập trình cần tối thiểu 20 triệu để có máy 16GB RAM/512GB SSD đảm bảo hiệu năng.",
             "details": results
         }
@@ -108,13 +108,14 @@ class WhatIfEngine:
     def run_ws2_gaming_shift(self) -> Dict[str, Any]:
         """
         WS2: Chuyển đổi nhu cầu sang Gaming / Đồ họa (w_GPU = 0.35).
-        Top 1 chuyển từ ASUS Zenbook 14 sang MSI Gaming Thin 15 @ FPT (DSS = 0.793).
+        Top 1 chuyển từ ASUS Zenbook 14 sang MSI Gaming Thin 15 @ FPT (DSS = 0.797).
         """
         q2 = {
             "name": "WS2 – Đồ họa/Gaming",
             "budget": 30_000_000,
             "alpha": 0.65,
-            "k": 10.0,
+            "kz": 1.5,
+            "k": 1.5,
             "hard": [("ram_gb", ">=", 16)],
             "r": {"cpu": 18000, "gpu": 9000, "ram": 16, "hz": 120, "w": 2.0},
             "w": {"cpu": 0.20, "gpu": 0.35, "ram": 0.15, "hz": 0.15, "w": 0.15}
@@ -128,10 +129,10 @@ class WhatIfEngine:
             "details": kpi
         }
 
-    def run_ws3_price_discount(self, discount_pcts: List[float] = [0.0, 5.0, 6.9, 10.0, 15.0]) -> Dict[str, Any]:
+    def run_ws3_price_discount(self, discount_pcts: List[float] = [0.0, 5.0, 8.05, 8.1, 10.0, 15.0]) -> Dict[str, Any]:
         """
         WS3: Mô phỏng nhà bán SAZO giảm giá Zenbook 14 2025 AI 7 350.
-        Xác định điểm bùng phát: khi giảm >= 6.9%, máy này vượt qua Zenbook 14 lên Hạng 1.
+        Xác định điểm bùng phát: khi giảm >= 8.05% (giá <= 26.94 triệu), máy này vượt qua Zenbook 14 lên Hạng 1.
         """
         q1 = load_persona("Q1")
         # Offer có Utility cao nhất trong nhóm chưa đạt hạng 1 (OBS0181)
@@ -167,14 +168,14 @@ class WhatIfEngine:
         return {
             "scenario": "WS3 – Phản ứng giá của nhà bán lẻ",
             "target_model": "ASUS Zenbook 14 2025 AI 7 350 @ SAZO",
-            "findings": "Khi SAZO giảm giá từ 6.9% trở lên (giá giảm xuống dưới ~27.28tr), điểm Deal tăng đủ để đưa máy này lên Hạng 1.",
+            "findings": "Khi SAZO giảm giá từ 8.05% trở lên (giá giảm xuống dưới 26.94tr), điểm Deal tăng đủ để đưa máy này lên Hạng 1 (vượt qua ASUS Zenbook 14 DSS = 0.831).",
             "simulation_steps": steps
         }
 
     def run_ws4_portability_constraint(self) -> Dict[str, Any]:
         """
         WS4: Ràng buộc di động cứng: cân nặng <= 1.3kg & pin >= 60Wh.
-        Số lựa chọn giảm mạnh từ 103 xuống đúng 4 lựa chọn; Hạng 1 vẫn thuộc về ASUS Zenbook 14 @ SAZO.
+        Số lựa chọn giảm mạnh từ 82 xuống đúng 4 lựa chọn; Hạng 1 vẫn thuộc về ASUS Zenbook 14 @ SAZO.
         """
         q1 = load_persona("Q1")
         q4 = {
@@ -186,7 +187,7 @@ class WhatIfEngine:
 
         return {
             "scenario": "WS4 – Ràng buộc di động cứng",
-            "findings": f"Số lựa chọn đạt chuẩn giảm từ 103 xuống {kpi['eligible_count']} máy. Quán quân không đổi: {kpi['top1']['brand']} {kpi['top1']['model']} @ {kpi['top1']['seller_name']}.",
+            "findings": f"Số lựa chọn đạt chuẩn giảm từ 82 xuống {kpi['eligible_count']} máy (4 máy). Quán quân không đổi: {kpi['top1']['brand']} {kpi['top1']['model']} @ {kpi['top1']['seller_name']}.",
             "details": kpi
         }
 

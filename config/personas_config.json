@@ -4,9 +4,11 @@
     "description": "SV ngành lập trình, ngân sách tối đa 30tr, cần máy đủ mạnh để code và đủ nhẹ để mang đi học.",
     "budget": 30000000.0,
     "alpha": 0.65,
+    "kz": 1.5,
     "hard_constraints": [
       {"field": "ram_gb", "op": ">=", "value": 16},
-      {"field": "ssd_gb", "op": ">=", "value": 512}
+      {"field": "ssd_gb", "op": ">=", "value": 512},
+      {"field": "cpu_benchmark_score", "op": ">=", "value": 18000}
     ],
     "thresholds_r": {
       "cpu": 18000,

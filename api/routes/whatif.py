@@ -46,7 +46,7 @@ def run_whatif_scenario(req: WhatIfRequest, db: Session = Depends(get_db)):
                 details=res["details"]
             )
         elif scenario == "WS3":
-            cuts = [0.0, 5.0, req.discount_cut_pct or 6.9, 10.0, 15.0]
+            cuts = [0.0, 5.0, req.discount_cut_pct if req.discount_cut_pct is not None else 8.1, 10.0, 15.0]
             res = whatif.run_ws3_price_discount(discount_pcts=cuts)
             return WhatIfResponse(
                 scenario=res["scenario"],
